@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from PIL import ImageGrab
 from PIL import Image
+import time
 
 def nothing(x):
 	pass
@@ -13,6 +14,7 @@ height = 1440
 
 #states
 fishing = False
+bite = False
 
 
 
@@ -25,8 +27,8 @@ cv2.createTrackbar('l2',"trackbars",0,255,nothing)
 cv2.createTrackbar('u3',"trackbars",0,255,nothing)
 cv2.createTrackbar('l3',"trackbars",0,255,nothing)
 
-cv2.namedWindow("trackbars2", cv2.WINDOW_NORMAL)
-cv2.createTrackbar('erosion',"trackbars2",0,20,nothing)
+#cv2.namedWindow("trackbars2", cv2.WINDOW_NORMAL)
+#cv2.createTrackbar('erosion',"trackbars2",0,20,nothing)
 
 def filterFrameforLure(img):
 	
@@ -105,21 +107,38 @@ while(True):
 	delta = cv2.absdiff(frame1, frame2)
 
 	#	erosion 
-	erosion_value = cv2.getTrackbarPos('erosion',"trackbars2")
-	kernel = np.ones((erosion_value, erosion_value), np.uint8)
-	delta = cv2.erode(delta, kernel, iterations=1)
+	# erosion_value = cv2.getTrackbarPos('erosion',"trackbars2")
+	# kernel = np.ones((erosion_value, erosion_value), np.uint8)
+	# delta = cv2.erode(delta, kernel, iterations=1)
+
+	motion_score = cv2.countNonZero(delta)
+
+	if (motion_score > 80):
+		bite = True
+		print("Fish on the line!!!")
+	else:
+		bite = False
 
 
-	#TODO:
+	#Game input Send click command to lure
+	# if (fishing and bite):
+	# 	clickSomeShit()
+	# else:
+	#	stop any existing thread
+	# 	castline() - start fishing timer thread - time.sleep(1.5)
+	#	
+	# 	
 
 
-	#motion detection and 
-	#Send click command to lure
-
+	#display
+	
 
 	cv2.imshow('delta',delta)
 	cv2.imshow('filter',frame1)
+
 	cv2.putText(origional, "Fishing: " + str(fishing), (5, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+	cv2.putText(origional, "Motion: " + str(motion_score), (5, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2) 
+	cv2.putText(origional, "Bite: " + str(bite), (5, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2) 
 	cv2.imshow('origional',origional)
 	
 	if cv2.waitKey(25) & 0xFF == ord('q'):
